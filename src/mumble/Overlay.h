@@ -260,6 +260,10 @@ class OverlayConfig : public ConfigWidget, public Ui::OverlayConfig {
 		QGraphicsPixmapItem *qgpiTimeLive;
 		OverlayUserGroup *oug;
 		QGraphicsTextItem *qgtiInstructions;
+		QColor qcBorder;
+		QColor qcFulfillment;
+
+		int qiCrosshairType;
 
 		float fViewScale;
 
@@ -289,6 +293,13 @@ class OverlayConfig : public ConfigWidget, public Ui::OverlayConfig {
 		void on_qpbFpsColor_clicked();
 		void on_qpbLoadPreset_clicked();
 		void on_qpbSavePreset_clicked();
+		void on_qpbBorderColor_clicked();
+		void on_qpbFulfillmentColor_clicked();
+		void on_qrbDot_clicked();
+		void on_qrbCircle_clicked();
+		void on_qrbCross_clicked();
+		void on_qrbCustom_clicked();
+		void on_qpbBrowseForFile_clicked();
 		void resizeScene(bool force=false);
 	public:
 		OverlayConfig(Settings &st);
@@ -327,6 +338,7 @@ class OverlayClient : public QObject {
 		QGraphicsPixmapItem *qgpiCursor;
 		QGraphicsPixmapItem *qgpiLogo;
 		QGraphicsPixmapItem *qgpiFPS;
+		QGraphicsPixmapItem *qgpiDot;
 		QGraphicsPixmapItem *qgpiTime;
 
 		quint64 uiPid;
@@ -366,6 +378,7 @@ class OverlayClient : public QObject {
 		void scheduleDelete();
 		void updateMouse();
 		void updateFPS();
+		void updateDot();
 		void updateTime();
 		bool update();
 		void openEditor();

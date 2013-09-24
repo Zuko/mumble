@@ -151,6 +151,16 @@ OverlaySettings::OverlaySettings() {
 	qfFps = qfUserName;
 	qrfFps = QRectF(10, 50, -1, 0.023438f);
 	bFps = false;
+	bCrosshair = false;
+	qsbHeight = 4;
+	qsbWidth = 4;
+	qsbBorder = 1;
+	qiCrosshairType = 1;
+	qcBorder = QColor(0, 0, 0);
+	qcFulfillment = QColor(255, 0, 0);
+	qhsAlpha = 255;
+	qsCrosshairFile = QLatin1String("");
+	
 	qrfTime = QRectF(10, 10, -1, 0.023438f);
 	bTime = false;
 
@@ -517,6 +527,7 @@ void OverlaySettings::load(QSettings* settings_ptr) {
 	SAVELOAD(bAvatar, "avatarshow");
 	SAVELOAD(bBox, "boxshow");
 	SAVELOAD(bFps, "fpsshow");
+	SAVELOAD(bCrosshair, "crosshairshow");
 	SAVELOAD(bTime, "timeshow");
 
 	SAVELOAD(fUserName, "useropacity");
@@ -535,6 +546,15 @@ void OverlaySettings::load(QSettings* settings_ptr) {
 	LOADFLAG(qaChannel, "channelalign");
 	LOADFLAG(qaMutedDeafened, "mutedalign");
 	LOADFLAG(qaAvatar, "avataralign");
+
+	SAVELOAD(qcBorder, "bordercolor");
+	SAVELOAD(qcFulfillment, "fulfillmentcolor");
+	SAVELOAD(qhsAlpha, "crosshairalpha");
+	SAVELOAD(qsbHeight, "crosshairheight");
+	SAVELOAD(qsbWidth, "crosshairwidth");
+	SAVELOAD(qiCrosshairType, "crosshairtype");
+	SAVELOAD(qsCrosshairFile, "crosshairfile");
+	SAVELOAD(qsbBorder, "crosshairborder");
 
 	SAVELOAD(bUseWhitelist, "usewhitelist");
 	SAVELOAD(qslBlacklist, "blacklist");
@@ -807,6 +827,7 @@ void OverlaySettings::save(QSettings* settings_ptr) {
 	SAVELOAD(bAvatar, "avatarshow");
 	SAVELOAD(bBox, "boxshow");
 	SAVELOAD(bFps, "fpsshow");
+	SAVELOAD(bCrosshair, "crosshairshow");
 	SAVELOAD(bTime, "timeshow");
 
 	SAVELOAD(fUserName, "useropacity");
@@ -825,6 +846,15 @@ void OverlaySettings::save(QSettings* settings_ptr) {
 	SAVEFLAG(qaChannel, "channelalign");
 	SAVEFLAG(qaMutedDeafened, "mutedalign");
 	SAVEFLAG(qaAvatar, "avataralign");
+	
+	SAVELOAD(qcBorder, "bordercolor");
+	SAVELOAD(qcFulfillment, "fulfillmentcolor");
+	SAVELOAD(qhsAlpha, "crosshairalpha");
+	SAVELOAD(qsbHeight, "crosshairheight");
+	SAVELOAD(qsbWidth, "crosshairwidth");
+	SAVELOAD(qiCrosshairType, "crosshairtype");
+	SAVELOAD(qsCrosshairFile, "crosshairfile");
+	SAVELOAD(qsbBorder, "crosshairborder");
 
 	settings_ptr->setValue(QLatin1String("usewhitelist"), bUseWhitelist);
 	settings_ptr->setValue(QLatin1String("blacklist"), qslBlacklist);

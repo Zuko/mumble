@@ -111,7 +111,15 @@ struct OverlaySettings {
 	QFont qfChannel;
 
 	QColor qcFps;
+	QColor qcBorder;
+	QColor qcFulfillment;
 	QFont qfFps;
+	int qhsAlpha;
+	int qsbHeight;
+	int qsbWidth;
+	int qiCrosshairType;
+	int qsbBorder;
+	QString qsCrosshairFile;
 
 	qreal fBoxPad;
 	qreal fBoxPenWidth;
@@ -125,6 +133,7 @@ struct OverlaySettings {
 	bool bBox;
 	bool bFps;
 	bool bTime;
+	bool bCrosshair;
 
 	qreal fUserName;
 	qreal fChannel;

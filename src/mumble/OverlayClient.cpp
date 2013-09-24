@@ -78,6 +78,12 @@ OverlayClient::OverlayClient(QLocalSocket *socket, QObject *p) :
 	qgpiFPS->setPos(g.s.os.qrfFps.x(), g.s.os.qrfFps.y());
 	qgpiFPS->show();
 
+	// Crosshair
+	qgpiDot = new QGraphicsPixmapItem();
+	qgs.addItem(qgpiDot);
+	qgpiDot->setPos(0, 0);
+	qgpiDot->show();
+
 	// Time
 	qgpiTime = new QGraphicsPixmapItem();
 	qgs.addItem(qgpiTime);
@@ -96,6 +102,7 @@ OverlayClient::~OverlayClient() {
 	delete qgpiTime;
 	delete qgpiCursor;
 	delete qgpiLogo;
+	delete qgpiDot;
 
 	qlsSocket->disconnect();
 	qlsSocket->abort();
@@ -110,6 +117,65 @@ bool OverlayClient::eventFilter(QObject *o, QEvent *e) {
 		return true;
 	}
 	return QObject::eventFilter(o, e);
+}
+
+void OverlayClient::updateDot() {
+    if (g.s.os.bCrosshair) {
+		BasepointPixmap img(uiWidth, uiHeight);
+		img.fill(Qt::transparent);
+
+		QPainter imgp(&img);
+		imgp.setBackground(QColor(0, 0, 0, 0));
+
+		if ((g.s.os.qiCrosshairType == 4) && !QFile::exists(g.s.os.qsCrosshairFile))
+			g.s.os.qiCrosshairType = 1;
+
+		if (g.s.os.qiCrosshairType != 4) {
+			QColor border(g.s.os.qcBorder);
+			border.setAlpha(g.s.os.qhsAlpha);
+			QColor fulfillment(g.s.os.qcFulfillment);
+			fulfillment.setAlpha(g.s.os.qhsAlpha);
+			switch (g.s.os.qiCrosshairType) {
+			case 1:
+			imgp.setBrush(QBrush(fulfillment));
+			imgp.setPen(QPen(border, g.s.os.qsbBorder, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+			imgp.drawEllipse((int)uiWidth / 2 - g.s.os.qsbWidth / 2,
+					 (int)uiHeight / 2 - g.s.os.qsbHeight / 2,
+					 g.s.os.qsbWidth,
+					 g.s.os.qsbHeight);
+			break;
+			case 2:
+			imgp.setBrush(Qt::transparent);
+			imgp.setPen(QPen(border, g.s.os.qsbBorder, Qt::SolidLine, Qt::RoundCap));
+			imgp.drawEllipse((int)uiWidth / 2 - g.s.os.qsbWidth / 2,
+					 (int)uiHeight / 2 - g.s.os.qsbHeight / 2,
+					 g.s.os.qsbWidth,
+					 g.s.os.qsbHeight);
+			break;
+			case 3:
+			imgp.setBrush(Qt::transparent);
+			imgp.setPen(QPen(border, g.s.os.qsbBorder));
+			imgp.drawLine((int)uiWidth / 2 - g.s.os.qsbWidth / 2,
+					  (int)uiHeight / 2,
+					  (int)uiWidth / 2 + g.s.os.qsbWidth / 2,
+					  (int)uiHeight / 2);
+			imgp.drawLine((int)uiWidth / 2,
+					  (int)uiHeight / 2 + g.s.os.qsbHeight / 2,
+					  (int)uiWidth / 2,
+					  (int)uiHeight / 2 - g.s.os.qsbHeight / 2);
+			break;
+			}
+		} else {
+			QImageReader qir(g.s.os.qsCrosshairFile);
+			QSize sz = qir.size();
+			imgp.drawImage((int)uiWidth / 2 - sz.width() / 2,
+				   (int)uiHeight / 2 - sz.height() / 2,
+				   qir.read());
+		}
+		qgpiDot->setPixmap(img);
+    } else {
+		qgpiDot->setPixmap(QPixmap());
+    }
 }
 
 void OverlayClient::updateFPS() {
@@ -555,6 +621,7 @@ void OverlayClient::setupScene(bool show) {
 
 	}
 	ougUsers.updateUsers();
+	updateDot();
 	updateFPS();
 	updateTime();
 }

@@ -289,6 +289,56 @@ void OverlayConfig::load(const Settings &r) {
 	qcbShowFps->setChecked(s.os.bFps);
 	qcbShowTime->setChecked(s.os.bTime);
 	qgpFps->setEnabled(s.os.bEnable);
+	
+	qcbShowCrosshair->setChecked(s.os.bCrosshair);
+	qcbShowCrosshair->setEnabled(s.os.bEnable);
+
+	qgbCrosshair->setEnabled(s.os.bEnable);
+
+	QGraphicsScene *sceneColors = new QGraphicsScene();
+	qgvBorder->setScene(sceneColors);
+	qgvBorder->setBackgroundBrush(QBrush(s.os.qcBorder));
+	qgvFulfillment->setScene(sceneColors);
+	qgvFulfillment->setBackgroundBrush(QBrush(s.os.qcFulfillment));
+
+	if (!s.os.qsCrosshairFile.isNull()) {
+		QFileInfo fi(s.os.qsCrosshairFile);
+		QImageReader qir(s.os.qsCrosshairFile, fi.suffix().toUtf8());
+
+		QImage img = qir.read();
+		s.os.qsCrosshairFile = QLatin1String("");
+	}
+
+	qsbWidth->setValue(s.os.qsbWidth);
+	qsbHeight->setValue(s.os.qsbHeight);
+	qsbBorder->setValue(s.os.qsbBorder);
+
+	qcBorder = s.os.qcBorder;
+	qcFulfillment = s.os.qcFulfillment;
+	qiCrosshairType = s.os.qiCrosshairType;
+
+	switch (s.os.qiCrosshairType) {
+		case 1:
+		qrbDot->setChecked(true);
+		break;
+		case 2:
+		qrbCircle->setChecked(true);
+		break;
+		case 3:
+		qrbCross->setChecked(true);
+		break;
+		case 4:
+		qrbCustom->setChecked(true);
+		break;
+	}
+
+	qgbColors->setEnabled(s.os.bEnable && s.os.qiCrosshairType != 4);
+	qgbSize->setEnabled(s.os.bEnable && s.os.qiCrosshairType != 4);
+	qgbCustom->setEnabled(s.os.bEnable && s.os.qiCrosshairType == 4);
+	qpbFulfillmentColor->setEnabled(s.os.qiCrosshairType == 1);
+
+	qhsAlpha->setSliderPosition(s.os.qhsAlpha);
+	qleCustom->setText(s.os.qsCrosshairFile);
 
 	qlwBlacklist->clear();
 	qlwWhitelist->clear();
@@ -337,6 +387,21 @@ void OverlayConfig::save() const {
 	s.os.bEnable = qcbEnable->isChecked();
 	s.os.bFps = qcbShowFps->isChecked();
 	s.os.bTime = qcbShowTime->isChecked();
+	s.os.bCrosshair = qcbShowCrosshair->isChecked();
+
+	//save crosshair size
+	s.os.qsbHeight = qsbHeight->value(); //czytanie
+	s.os.qsbWidth = qsbWidth->value(); //czytanie
+	s.os.qsbBorder = qsbBorder->value(); //czytanie
+
+	s.os.qsCrosshairFile = qleCustom->text();
+
+	//save colors
+	s.os.qcBorder = qcBorder;
+	s.os.qcFulfillment = qcFulfillment;
+	s.os.qhsAlpha = qhsAlpha->sliderPosition();
+
+	s.os.qiCrosshairType = qiCrosshairType;
 
 	// Directly save overlay config
 	s.os.qslBlacklist.clear();
@@ -438,6 +503,13 @@ void OverlayConfig::on_qrbBlacklist_toggled(bool checked) {
 
 void OverlayConfig::on_qcbEnable_stateChanged(int state) {
 	qgpFps->setEnabled(state == Qt::Checked);
+	qcbShowCrosshair->setEnabled(state == Qt::Checked);
+	qgbCrosshair->setEnabled(state == Qt::Checked);
+
+	qgbColors->setEnabled(state == Qt::Checked && qiCrosshairType != 4);
+	qgbSize->setEnabled(state == Qt::Checked && qiCrosshairType != 4);
+	qgbCustom->setEnabled(state == Qt::Checked && qiCrosshairType == 4);
+	qpbFulfillmentColor->setEnabled(state == Qt::Checked && qiCrosshairType == 1);
 }
 
 void OverlayConfig::on_qpbInstall_clicked() {
@@ -524,6 +596,80 @@ void OverlayConfig::on_qpbLoadPreset_clicked() {
 	s.os = load_preset;
 
 	load(s);
+}
+
+void OverlayConfig::on_qpbBrowseForFile_clicked() {
+    if (g.s.qsImagePath.isEmpty() || ! QDir::root().exists(g.s.qsImagePath))
+	    g.s.qsImagePath = QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
+
+    QString fname = QFileDialog::getOpenFileName(this, tr("Choose image file"), g.s.qsImagePath, tr("Images (*.png *.jpg *.jpeg *.svg)"));
+
+    if (fname.isNull())
+	    return;
+
+    QFileInfo fi(fname);
+    QImageReader qir(fname, fi.suffix().toUtf8());
+
+    QImage img = qir.read();
+    if (img.isNull()) {
+	    QMessageBox::warning(this, tr("Failed to load image"), tr("Image format not recognized."));
+	    return;
+    }
+
+    qleCustom->setText(fname);
+}
+
+void OverlayConfig::on_qpbBorderColor_clicked() {
+    QColor color = QColorDialog::getColor(qcBorder);
+
+    if (color.isValid()) {
+	    qcBorder = color;
+	    qgvBorder->setBackgroundBrush(QBrush(color));
+    }
+}
+
+void OverlayConfig::on_qpbFulfillmentColor_clicked() {
+    QColor color = QColorDialog::getColor(qcFulfillment);
+
+    if (color.isValid()) {
+	    qcFulfillment = color;
+	    qgvFulfillment->setBackgroundBrush(QBrush(color));
+    }
+}
+
+void OverlayConfig::on_qrbDot_clicked()
+{
+    qgbColors->setEnabled(true);
+    qgbSize->setEnabled(true);
+    qgbCustom->setEnabled(false);
+    qpbFulfillmentColor->setEnabled(true);
+    qiCrosshairType = 1;
+}
+
+void OverlayConfig::on_qrbCircle_clicked()
+{
+    qgbColors->setEnabled(true);
+    qgbSize->setEnabled(true);
+    qgbCustom->setEnabled(false);
+    qpbFulfillmentColor->setEnabled(false);
+    qiCrosshairType = 2;
+}
+
+void OverlayConfig::on_qrbCross_clicked()
+{
+    qgbColors->setEnabled(true);
+    qgbSize->setEnabled(true);
+    qgbCustom->setEnabled(false);
+    qpbFulfillmentColor->setEnabled(false);
+    qiCrosshairType = 3;
+}
+
+void OverlayConfig::on_qrbCustom_clicked()
+{
+    qgbColors->setEnabled(false);
+    qgbSize->setEnabled(false);
+    qgbCustom->setEnabled(true);
+    qiCrosshairType = 4;
 }
 
 void OverlayConfig::on_qpbSavePreset_clicked() {
