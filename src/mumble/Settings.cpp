@@ -266,7 +266,7 @@ Settings::Settings() {
 	atTransmit = VAD;
 	bTransmitPosition = false;
 	bMute = bDeaf = false;
-	bTTS = true;
+	bTTS = false;
 	bTTSMessageReadBack = false;
 	iTTSVolume = 75;
 	iTTSThreshold = 250;
@@ -299,14 +299,14 @@ Settings::Settings() {
 
 	uiDoublePush = 0;
 	uiPTTHold = 0;
-	bExpert = false;
+	bExpert = true;
 
 #ifdef NO_UPDATE_CHECK
 	bUpdateCheck = false;
 	bPluginCheck = false;
 #else
-	bUpdateCheck = true;
-	bPluginCheck = true;
+	bUpdateCheck = false;
+	bPluginCheck = false;
 #endif
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
@@ -315,12 +315,12 @@ Settings::Settings() {
 	qsImagePath = QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
 #endif
 
-	ceExpand = ChannelsWithUsers;
+	ceExpand = NoChannels;
 	ceChannelDrag = Ask;
 	bMinimalView = false;
 	bHideFrame = false;
 	aotbAlwaysOnTop = OnTopNever;
-	bAskOnQuit = true;
+	bAskOnQuit = false;
 #ifdef Q_OS_WIN
 	// Don't enable minimize to tray by default on Windows 7 or Windows 8
 	const QSysInfo::WinVersion winVer = QSysInfo::windowsVersion();
@@ -330,10 +330,10 @@ Settings::Settings() {
 #endif
 	bStateInTray = true;
 	bUsage = true;
-	bShowUserCount = false;
-	bChatBarUseSelection = false;
+	bShowUserCount = true;
+	bChatBarUseSelection = true;
 	bFilterHidesEmptyChannels = true;
-	bFilterActive = false;
+	bFilterActive = true;
 
 	wlWindowLayout = LayoutClassic;
 	bShowContextMenuInMenuBar = false;
