@@ -300,6 +300,13 @@ Settings::Settings() {
 	uiDoublePush = 0;
 	uiPTTHold = 0;
 	bExpert = true;
+	bEnableRanKBMsgs = false;
+
+	int ii = 0;
+	while (kickBanReasons[ii]) {
+		qslKickBanReasons << QLatin1String(kickBanReasons[ii]);
+		ii++;
+	}
 
 #ifdef NO_UPDATE_CHECK
 	bUpdateCheck = false;
@@ -715,6 +722,10 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(iLCDUserViewMinColWidth, "lcd/userview/mincolwidth");
 	SAVELOAD(iLCDUserViewSplitterWidth, "lcd/userview/splitterwidth");
 
+	// Kick/Ban Reasons
+	SAVELOAD(bEnableRanKBMsgs, "log/bkbmessages");
+	SAVELOAD(qslKickBanReasons, "log/kbmessages");
+
 	QByteArray qba = qvariant_cast<QByteArray> (settings_ptr->value(QLatin1String("net/certificate")));
 	if (! qba.isEmpty())
 		kpCertificate = CertWizard::importCert(qba);
@@ -1010,6 +1021,10 @@ void Settings::save() {
 	// LCD
 	SAVELOAD(iLCDUserViewMinColWidth, "lcd/userview/mincolwidth");
 	SAVELOAD(iLCDUserViewSplitterWidth, "lcd/userview/splitterwidth");
+
+	// Kick/Ban Reasons
+	SAVELOAD(bEnableRanKBMsgs, "log/bkbmessages");
+	SAVELOAD(qslKickBanReasons, "log/kbmessages");
 
 	QByteArray qba = CertWizard::exportCert(kpCertificate);
 	settings_ptr->setValue(QLatin1String("net/certificate"), qba);
