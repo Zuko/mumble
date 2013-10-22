@@ -325,6 +325,195 @@ QString OSInfo::getOSVersion() {
 	return qsCached;
 }
 
+#if defined(Q_OS_WIN)
+QString OSInfo::getOSDisplayableVersion() {
+	static QString qsCachedD;
+
+	if (! qsCachedD.isNull())
+		return qsCachedD.isEmpty() ? QString() : qsCachedD;
+
+	QString osdispver;
+
+	OSVERSIONINFOEXW ovi;
+	_SYSTEM_INFO si;
+	typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
+	PGPI pGPI;
+	DWORD dwType;
+
+	memset(&ovi, 0, sizeof(ovi));
+
+	ovi.dwOSVersionInfoSize=sizeof(ovi);
+	GetVersionEx(reinterpret_cast<OSVERSIONINFOW *>(&ovi));
+	GetNativeSystemInfo(&si);
+
+	if (ovi.dwMajorVersion == 6) {
+		if(ovi.dwMinorVersion == 0) {
+			if (ovi.wProductType == VER_NT_WORKSTATION)
+				osdispver = QLatin1String("Windows Vista");
+			else
+				osdispver = QLatin1String("Windows Server 2008");
+		}
+		else if (ovi.dwMinorVersion == 1) {
+			if (ovi.wProductType == VER_NT_WORKSTATION)
+				osdispver = QLatin1String("Windows 7");
+			else
+				osdispver = QLatin1String("Windows Server 2008 R2");
+		}
+		else if (ovi.dwMinorVersion == 2) {
+			if (ovi.wProductType == VER_NT_WORKSTATION)
+				osdispver = QLatin1String("Windows 8");
+			else
+				osdispver = QLatin1String("Windows Server 2012");
+		}
+
+		pGPI = (PGPI) GetProcAddress(
+		GetModuleHandle(TEXT("kernel32.dll")),
+		"GetProductInfo");
+		pGPI(ovi.dwMajorVersion, ovi.dwMinorVersion, 0, 0, &dwType);
+
+		switch(dwType) {
+		case PRODUCT_ULTIMATE:
+			osdispver.append(QLatin1String(" Ultimate Edition"));
+			break;
+		case PRODUCT_PROFESSIONAL:
+			osdispver.append(QLatin1String(" Professional"));
+			break;
+		case PRODUCT_HOME_PREMIUM:
+			osdispver.append(QLatin1String(" Home Premium Edition"));
+			break;
+		case PRODUCT_HOME_BASIC:
+			osdispver.append(QLatin1String(" Home Basic Edition"));
+			break;
+		case PRODUCT_ENTERPRISE:
+			osdispver.append(QLatin1String(" Enterprise Edition"));
+			break;
+		case PRODUCT_BUSINESS:
+			osdispver.append(QLatin1String(" Business Edition"));
+			break;
+		case PRODUCT_STARTER:
+			osdispver.append(QLatin1String(" Starter Edition"));
+			break;
+		case PRODUCT_CLUSTER_SERVER:
+			osdispver.append(QLatin1String(" Cluster Server Edition"));
+			break;
+		case PRODUCT_DATACENTER_SERVER:
+			osdispver.append(QLatin1String(" Datacenter Edition"));
+			break;
+		case PRODUCT_DATACENTER_SERVER_CORE:
+			osdispver.append(QLatin1String(" Datacenter Edition (core installation)"));
+			break;
+		case PRODUCT_ENTERPRISE_SERVER:
+			osdispver.append(QLatin1String(" Enterprise Edition"));
+			break;
+		case PRODUCT_ENTERPRISE_SERVER_CORE:
+			osdispver.append(QLatin1String(" Enterprise Edition (core installation)"));
+			break;
+		case PRODUCT_ENTERPRISE_SERVER_IA64:
+			osdispver.append(QLatin1String(" Enterprise Edition for Itanium-based Systems"));
+			break;
+		case PRODUCT_SMALLBUSINESS_SERVER:
+			osdispver.append(QLatin1String(" Small Business Server"));
+			break;
+		case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
+			osdispver.append(QLatin1String(" Small Business Server Premium Edition"));
+			break;
+		case PRODUCT_STANDARD_SERVER:
+			osdispver.append(QLatin1String(" Standard Edition"));
+			break;
+		case PRODUCT_STANDARD_SERVER_CORE:
+			osdispver.append(QLatin1String(" Standard Edition (core installation)"));
+			break;
+		case PRODUCT_WEB_SERVER:
+			osdispver.append(QLatin1String(" Web Server Edition"));
+			break;
+		}
+	}
+
+	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 0) {
+		osdispver = QLatin1String("Windows 2000");
+		if (ovi.wProductType == VER_NT_WORKSTATION)
+			osdispver.append(QLatin1String("Professional"));
+		else
+			if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
+				osdispver.append(QLatin1String("Datacenter Server"));
+			else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
+				osdispver.append(QLatin1String("Advanced Server"));
+			else
+				osdispver.append(QLatin1String("Server"));
+	}
+
+	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 1) {
+		osdispver = QLatin1String("Windows XP ");
+		if (ovi.wSuiteMask & VER_SUITE_PERSONAL)
+			osdispver.append(QLatin1String("Home Edition"));
+		else
+			osdispver.append(QLatin1String("Professional"));
+	}
+
+	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 2) {
+		if (GetSystemMetrics(SM_SERVERR2))
+			osdispver = QLatin1String("Server 2003 R2");
+		else if (ovi.wSuiteMask & VER_SUITE_STORAGE_SERVER)
+			osdispver = QLatin1String("Storage Server 2003");
+		else if (ovi.wSuiteMask & VER_SUITE_WH_SERVER)
+			osdispver = QLatin1String("Home Server");
+		else if (ovi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
+			osdispver = QLatin1String("XP Professional x64 Edition");
+		else
+			osdispver = QLatin1String("Windows Server 2003");
+
+		if (ovi.wProductType != VER_NT_WORKSTATION) {
+			if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64) {
+				if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
+					osdispver.append(QLatin1String(" Datacenter x64 Edition"));
+				else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
+					osdispver.append(QLatin1String(" Enterprise x64 Edition"));
+				else
+					osdispver.append(QLatin1String(" Standard x64 Edition"));
+			} else {
+				if (ovi.wSuiteMask & VER_SUITE_COMPUTE_SERVER)
+					osdispver.append(QLatin1String(" Compute Cluster Edition"));
+				else if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
+					osdispver.append(QLatin1String(" Datacenter Edition"));
+				else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
+					osdispver.append(QLatin1String(" Enterprise Edition"));
+				else if (ovi.wSuiteMask & VER_SUITE_BLADE)
+					osdispver.append(QLatin1String(" Web Edition"));
+				else
+					osdispver.append(QLatin1String(" Standard Edition"));
+			}
+		}
+	}
+
+	// Service Packs
+	QString sp = sp.fromStdWString(ovi.szCSDVersion);
+	if (sp.length() > 0) {
+		sp.prepend(QLatin1String("\n"));
+		osdispver.append(sp);
+		osdispver.append(QLatin1String(","));
+	}
+
+	// 32/64?
+	if (ovi.dwMajorVersion >= 6) {
+		if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
+			osdispver.append(QLatin1String(" 64-bit"));
+		else if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_INTEL)
+			osdispver.append(QLatin1String(" 32-bit"));
+	}
+
+	QString osv;
+	osv.sprintf(" (%d.%d.%d)", ovi.dwMajorVersion, ovi.dwMinorVersion, ovi.dwBuildNumber);
+	osdispver.append(osv);
+
+	if (! osdispver.isNull())
+		qsCachedD = osdispver;
+	else
+		qsCachedD = QLatin1String("");
+
+	return qsCachedD;
+}
+#endif
+
 void OSInfo::fillXml(QDomDocument &doc, QDomElement &root, const QString &os, const QString &osver, const QList<QHostAddress> &qlBind) {
 	QDomElement tag;
 	QDomText t;
