@@ -35,7 +35,7 @@
 #include <intrin.h>
 #endif
 
-#ifdef Q_OS_UNIX && !defined(Q_OS_MAC)
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
 #include <sys/utsname.h>
 #endif
 
