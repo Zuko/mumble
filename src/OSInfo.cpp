@@ -325,14 +325,9 @@ QString OSInfo::getOSVersion() {
 	return qsCached;
 }
 
-#if defined(Q_OS_WIN)
 QString OSInfo::getOSDisplayableVersion() {
-	static QString qsCachedD;
-
-	if (! qsCachedD.isNull())
-		return qsCachedD.isEmpty() ? QString() : qsCachedD;
-
-	QString osdispver;
+#if defined(Q_OS_WIN)
+	QString osdispver = QLatin1String("Windows");
 
 	OSVERSIONINFOEXW ovi;
 	_SYSTEM_INFO si;
@@ -342,7 +337,7 @@ QString OSInfo::getOSDisplayableVersion() {
 
 	memset(&ovi, 0, sizeof(ovi));
 
-	ovi.dwOSVersionInfoSize=sizeof(ovi);
+	ovi.dwOSVersionInfoSize = sizeof(ovi);
 	GetVersionEx(reinterpret_cast<OSVERSIONINFOW *>(&ovi));
 	GetNativeSystemInfo(&si);
 
@@ -364,6 +359,12 @@ QString OSInfo::getOSDisplayableVersion() {
 				osdispver = QLatin1String("Windows 8");
 			else
 				osdispver = QLatin1String("Windows Server 2012");
+		}
+		else if (ovi.dwMinorVersion == 3) {
+			if (ovi.wProductType == VER_NT_WORKSTATION)
+				osdispver = QLatin1String("Windows 8.1");
+			else
+				osdispver = QLatin1String("Windows Server 2012 R2");
 		}
 
 		pGPI = (PGPI) GetProcAddress(
@@ -452,18 +453,18 @@ QString OSInfo::getOSDisplayableVersion() {
 
 	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 2) {
 		if (GetSystemMetrics(SM_SERVERR2))
-			osdispver = QLatin1String("Server 2003 R2");
+			osdispver = QLatin1String("Windows Server 2003 R2");
 		else if (ovi.wSuiteMask & VER_SUITE_STORAGE_SERVER)
-			osdispver = QLatin1String("Storage Server 2003");
+			osdispver = QLatin1String("Windows Storage Server 2003");
 		else if (ovi.wSuiteMask & VER_SUITE_WH_SERVER)
-			osdispver = QLatin1String("Home Server");
-		else if (ovi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
-			osdispver = QLatin1String("XP Professional x64 Edition");
+			osdispver = QLatin1String("Windows Home Server");
+		else if (ovi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+			osdispver = QLatin1String("Windows XP Professional x64 Edition");
 		else
 			osdispver = QLatin1String("Windows Server 2003");
 
 		if (ovi.wProductType != VER_NT_WORKSTATION) {
-			if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64) {
+			if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
 				if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
 					osdispver.append(QLatin1String(" Datacenter x64 Edition"));
 				else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
@@ -495,9 +496,9 @@ QString OSInfo::getOSDisplayableVersion() {
 
 	// 32/64?
 	if (ovi.dwMajorVersion >= 6) {
-		if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
+		if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
 			osdispver.append(QLatin1String(" 64-bit"));
-		else if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_INTEL)
+		else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
 			osdispver.append(QLatin1String(" 32-bit"));
 	}
 
@@ -505,14 +506,11 @@ QString OSInfo::getOSDisplayableVersion() {
 	osv.sprintf(" (%d.%d.%d)", ovi.dwMajorVersion, ovi.dwMinorVersion, ovi.dwBuildNumber);
 	osdispver.append(osv);
 
-	if (! osdispver.isNull())
-		qsCachedD = osdispver;
-	else
-		qsCachedD = QLatin1String("");
-
-	return qsCachedD;
-}
+	return osdispver;
+#else
+	return QString();
 #endif
+}
 
 void OSInfo::fillXml(QDomDocument &doc, QDomElement &root, const QString &os, const QString &osver, const QList<QHostAddress> &qlBind) {
 	QDomElement tag;
