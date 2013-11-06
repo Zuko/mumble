@@ -65,7 +65,7 @@ macx {
 
 dbus {
 	DEFINES *= USE_DBUS
-	CONFIG *= qdbus
+	CONFIG *= qbus
 	HEADERS *= DBus.h
 	SOURCES *= DBus.cpp
 }
