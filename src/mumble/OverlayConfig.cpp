@@ -599,77 +599,80 @@ void OverlayConfig::on_qpbLoadPreset_clicked() {
 }
 
 void OverlayConfig::on_qpbBrowseForFile_clicked() {
-    if (g.s.qsImagePath.isEmpty() || ! QDir::root().exists(g.s.qsImagePath))
-	    g.s.qsImagePath = QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
+	if (g.s.qsImagePath.isEmpty() || ! QDir::root().exists(g.s.qsImagePath))
+	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+		g.s.qsImagePath = QStandardPaths::StandardLocation(QStandardPaths::PicturesLocation);
+	#else
+		g.s.qsImagePath = QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
+	#endif
+	QString fname = QFileDialog::getOpenFileName(this, tr("Choose image file"), g.s.qsImagePath, tr("Images (*.png *.jpg *.jpeg *.svg)"));
 
-    QString fname = QFileDialog::getOpenFileName(this, tr("Choose image file"), g.s.qsImagePath, tr("Images (*.png *.jpg *.jpeg *.svg)"));
+	if (fname.isNull())
+		return;
 
-    if (fname.isNull())
-	    return;
+	QFileInfo fi(fname);
+	QImageReader qir(fname, fi.suffix().toUtf8());
 
-    QFileInfo fi(fname);
-    QImageReader qir(fname, fi.suffix().toUtf8());
+	QImage img = qir.read();
+	if (img.isNull()) {
+		QMessageBox::warning(this, tr("Failed to load image"), tr("Image format not recognized."));
+		return;
+	}
 
-    QImage img = qir.read();
-    if (img.isNull()) {
-	    QMessageBox::warning(this, tr("Failed to load image"), tr("Image format not recognized."));
-	    return;
-    }
-
-    qleCustom->setText(fname);
+	qleCustom->setText(fname);
 }
 
 void OverlayConfig::on_qpbBorderColor_clicked() {
-    QColor color = QColorDialog::getColor(qcBorder);
+	QColor color = QColorDialog::getColor(qcBorder);
 
-    if (color.isValid()) {
-	    qcBorder = color;
-	    qgvBorder->setBackgroundBrush(QBrush(color));
-    }
+	if (color.isValid()) {
+		qcBorder = color;
+		qgvBorder->setBackgroundBrush(QBrush(color));
+	}
 }
 
 void OverlayConfig::on_qpbFulfillmentColor_clicked() {
-    QColor color = QColorDialog::getColor(qcFulfillment);
+	QColor color = QColorDialog::getColor(qcFulfillment);
 
-    if (color.isValid()) {
-	    qcFulfillment = color;
-	    qgvFulfillment->setBackgroundBrush(QBrush(color));
-    }
+		if (color.isValid()) {
+		qcFulfillment = color;
+		qgvFulfillment->setBackgroundBrush(QBrush(color));
+	}
 }
 
 void OverlayConfig::on_qrbDot_clicked()
 {
-    qgbColors->setEnabled(true);
-    qgbSize->setEnabled(true);
-    qgbCustom->setEnabled(false);
-    qpbFulfillmentColor->setEnabled(true);
-    qiCrosshairType = 1;
+	qgbColors->setEnabled(true);
+	qgbSize->setEnabled(true);
+	qgbCustom->setEnabled(false);
+	qpbFulfillmentColor->setEnabled(true);
+	qiCrosshairType = 1;
 }
 
 void OverlayConfig::on_qrbCircle_clicked()
 {
-    qgbColors->setEnabled(true);
-    qgbSize->setEnabled(true);
-    qgbCustom->setEnabled(false);
-    qpbFulfillmentColor->setEnabled(false);
-    qiCrosshairType = 2;
+	qgbColors->setEnabled(true);
+	qgbSize->setEnabled(true);
+	qgbCustom->setEnabled(false);
+	qpbFulfillmentColor->setEnabled(false);
+	qiCrosshairType = 2;
 }
 
 void OverlayConfig::on_qrbCross_clicked()
 {
-    qgbColors->setEnabled(true);
-    qgbSize->setEnabled(true);
-    qgbCustom->setEnabled(false);
-    qpbFulfillmentColor->setEnabled(false);
-    qiCrosshairType = 3;
+	qgbColors->setEnabled(true);
+	qgbSize->setEnabled(true);
+	qgbCustom->setEnabled(false);
+	qpbFulfillmentColor->setEnabled(false);
+	qiCrosshairType = 3;
 }
 
 void OverlayConfig::on_qrbCustom_clicked()
 {
-    qgbColors->setEnabled(false);
-    qgbSize->setEnabled(false);
-    qgbCustom->setEnabled(true);
-    qiCrosshairType = 4;
+	qgbColors->setEnabled(false);
+	qgbSize->setEnabled(false);
+	qgbCustom->setEnabled(true);
+	qiCrosshairType = 4;
 }
 
 void OverlayConfig::on_qpbSavePreset_clicked() {
