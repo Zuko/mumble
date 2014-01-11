@@ -1,5 +1,4 @@
 /* Copyright (C) 2005-2011, Thorvald Natvig <thorvald@natvig.com>
-   Copyright (C) 2009-2011, Stefan Hacker <dd0t@users.sourceforge.net>
 
    All rights reserved.
 
@@ -88,11 +87,11 @@ QString OSInfo::getMacHash(const QList<QHostAddress> &qlBind) {
 
 QString OSInfo::getOS() {
 #if defined(Q_OS_WIN)
-	return QLatin1String("Windows");
+	return QLatin1String("Win");
 #elif defined(Q_OS_MAC)
-	return QLatin1String("Mac OS X");
+	return QLatin1String("OSX");
 #else
-	return QLatin1String("Linux");
+	return QLatin1String("X11");
 #endif
 }
 
@@ -106,175 +105,14 @@ QString OSInfo::getOSVersion() {
 
 #if defined(Q_OS_WIN)
 	OSVERSIONINFOEXW ovi;
-	_SYSTEM_INFO si;
-	typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
-	PGPI pGPI;
-	DWORD dwType;
-
 	memset(&ovi, 0, sizeof(ovi));
 
 	ovi.dwOSVersionInfoSize=sizeof(ovi);
-	GetVersionEx(reinterpret_cast<OSVERSIONINFOW *>(&ovi));
-	GetNativeSystemInfo(&si);
-
-	if (ovi.dwMajorVersion == 6) {
-		if(ovi.dwMinorVersion == 0) {
-			if (ovi.wProductType == VER_NT_WORKSTATION)
-				os = QLatin1String("Vista");
-			else
-				os = QLatin1String("Server 2008");
-		}
-		else if (ovi.dwMinorVersion == 1) {
-			if (ovi.wProductType == VER_NT_WORKSTATION)
-				os = QLatin1String("7");
-			else
-				os = QLatin1String("Server 2008 R2");
-		}
-		else if (ovi.dwMinorVersion == 2) {
-			if (ovi.wProductType == VER_NT_WORKSTATION)
-				os = QLatin1String("8");
-			else
-				os = QLatin1String("Server 2012");
-		}
-
-		pGPI = (PGPI) GetProcAddress(
-		GetModuleHandle(TEXT("kernel32.dll")),
-		"GetProductInfo");
-		pGPI(ovi.dwMajorVersion, ovi.dwMinorVersion, 0, 0, &dwType);
-
-		switch(dwType) {
-		case PRODUCT_ULTIMATE:
-			os.append(QLatin1String(" Ultimate Edition"));
-			break;
-		case PRODUCT_PROFESSIONAL:
-			os.append(QLatin1String(" Professional"));
-			break;
-		case PRODUCT_HOME_PREMIUM:
-			os.append(QLatin1String(" Home Premium Edition"));
-			break;
-		case PRODUCT_HOME_BASIC:
-			os.append(QLatin1String(" Home Basic Edition"));
-			break;
-		case PRODUCT_ENTERPRISE:
-			os.append(QLatin1String(" Enterprise Edition"));
-			break;
-		case PRODUCT_BUSINESS:
-			os.append(QLatin1String(" Business Edition"));
-			break;
-		case PRODUCT_STARTER:
-			os.append(QLatin1String(" Starter Edition"));
-			break;
-		case PRODUCT_CLUSTER_SERVER:
-			os.append(QLatin1String(" Cluster Server Edition"));
-			break;
-		case PRODUCT_DATACENTER_SERVER:
-			os.append(QLatin1String(" Datacenter Edition"));
-			break;
-		case PRODUCT_DATACENTER_SERVER_CORE:
-			os.append(QLatin1String(" Datacenter Edition (core installation)"));
-			break;
-		case PRODUCT_ENTERPRISE_SERVER:
-			os.append(QLatin1String(" Enterprise Edition"));
-			break;
-		case PRODUCT_ENTERPRISE_SERVER_CORE:
-			os.append(QLatin1String(" Enterprise Edition (core installation)"));
-			break;
-		case PRODUCT_ENTERPRISE_SERVER_IA64:
-			os.append(QLatin1String(" Enterprise Edition for Itanium-based Systems"));
-			break;
-		case PRODUCT_SMALLBUSINESS_SERVER:
-			os.append(QLatin1String(" Small Business Server"));
-			break;
-		case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
-			os.append(QLatin1String(" Small Business Server Premium Edition"));
-			break;
-		case PRODUCT_STANDARD_SERVER:
-			os.append(QLatin1String(" Standard Edition"));
-			break;
-		case PRODUCT_STANDARD_SERVER_CORE:
-			os.append(QLatin1String(" Standard Edition (core installation)"));
-			break;
-		case PRODUCT_WEB_SERVER:
-			os.append(QLatin1String(" Web Server Edition"));
-			break;
-		}
+	if (!GetVersionEx(reinterpret_cast<OSVERSIONINFOW *>(&ovi))) {
+		return QString();
 	}
 
-	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 0) {
-		os = QLatin1String("2000");
-		if (ovi.wProductType == VER_NT_WORKSTATION)
-			os.append(QLatin1String("Professional"));
-		else
-			if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
-				os.append(QLatin1String("Datacenter Server"));
-			else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
-				os.append(QLatin1String("Advanced Server"));
-			else 
-				os.append(QLatin1String("Server"));
-	}
-
-	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 1) {
-		os = QLatin1String("XP ");
-		if (ovi.wSuiteMask & VER_SUITE_PERSONAL)
-			os.append(QLatin1String("Home Edition"));
-		else
-			os.append(QLatin1String("Professional"));
-	}
-
-	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 2) {
-		if (GetSystemMetrics(SM_SERVERR2))
-			os = QLatin1String("Server 2003 R2");
-		else if (ovi.wSuiteMask & VER_SUITE_STORAGE_SERVER)
-			os = QLatin1String("Storage Server 2003");
-		else if (ovi.wSuiteMask & VER_SUITE_WH_SERVER)
-			os = QLatin1String("Home Server");
-		else if (ovi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
-			os = QLatin1String("XP Professional x64 Edition");
-		else
-			os = QLatin1String("Server 2003");
-
-		if (ovi.wProductType != VER_NT_WORKSTATION) {
-			if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64) {
-				if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
-					os.append(QLatin1String(" Datacenter x64 Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
-					os.append(QLatin1String(" Enterprise x64 Edition"));
-				else 
-					os.append(QLatin1String(" Standard x64 Edition"));
-			} else {
-				if (ovi.wSuiteMask & VER_SUITE_COMPUTE_SERVER)
-					os.append(QLatin1String(" Compute Cluster Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
-					os.append(QLatin1String(" Datacenter Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
-					os.append(QLatin1String(" Enterprise Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_BLADE)
-					os.append(QLatin1String(" Web Edition"));
-				else 
-					os.append(QLatin1String(" Standard Edition"));
-			}
-		}
-	}
-
-	// Service Packs
-	QString sp = sp.fromStdWString(ovi.szCSDVersion);
-	if (sp.length() > 0) {
-		sp.prepend(QLatin1String("\n"));
-		os.append(sp);
-		os.append(QLatin1String(","));
-	}
-
-	// 32/64?
-	if (ovi.dwMajorVersion >= 6) {
-		if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
-			os.append(QLatin1String(" 64-bit"));
-		else if (si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_INTEL)
-			os.append(QLatin1String(" 32-bit"));
-	}
-
-	QString osv;
-	osv.sprintf(" (%d.%d.%d)", ovi.dwMajorVersion, ovi.dwMinorVersion, ovi.dwBuildNumber);
-	os.append(osv);
+	os.sprintf("%d.%d.%d.%d", ovi.dwMajorVersion, ovi.dwMinorVersion, ovi.dwBuildNumber, (ovi.wProductType == VER_NT_WORKSTATION) ? 1 : 0);
 #elif defined(Q_OS_MAC)
 	SInt32 major, minor, bugfix;
 	OSErr err = Gestalt(gestaltSystemVersionMajor, &major);
@@ -327,50 +165,58 @@ QString OSInfo::getOSVersion() {
 
 QString OSInfo::getOSDisplayableVersion() {
 #if defined(Q_OS_WIN)
-	QString osdispver = QLatin1String("Windows");
+	QString osdispver;
 
 	OSVERSIONINFOEXW ovi;
-	_SYSTEM_INFO si;
-	typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
-	PGPI pGPI;
-	DWORD dwType;
-
 	memset(&ovi, 0, sizeof(ovi));
-
 	ovi.dwOSVersionInfoSize = sizeof(ovi);
-	GetVersionEx(reinterpret_cast<OSVERSIONINFOW *>(&ovi));
+	if (!GetVersionEx(reinterpret_cast<OSVERSIONINFOW *>(&ovi))) {
+		return QString();
+	}
+
+	_SYSTEM_INFO si;
 	GetNativeSystemInfo(&si);
 
 	if (ovi.dwMajorVersion == 6) {
 		if(ovi.dwMinorVersion == 0) {
-			if (ovi.wProductType == VER_NT_WORKSTATION)
+			if (ovi.wProductType == VER_NT_WORKSTATION) {
 				osdispver = QLatin1String("Windows Vista");
-			else
+			} else {
 				osdispver = QLatin1String("Windows Server 2008");
+			}
 		}
 		else if (ovi.dwMinorVersion == 1) {
-			if (ovi.wProductType == VER_NT_WORKSTATION)
+			if (ovi.wProductType == VER_NT_WORKSTATION) {
 				osdispver = QLatin1String("Windows 7");
-			else
+			} else {
 				osdispver = QLatin1String("Windows Server 2008 R2");
+			}
 		}
 		else if (ovi.dwMinorVersion == 2) {
-			if (ovi.wProductType == VER_NT_WORKSTATION)
+			if (ovi.wProductType == VER_NT_WORKSTATION) {
 				osdispver = QLatin1String("Windows 8");
-			else
+			} else {
 				osdispver = QLatin1String("Windows Server 2012");
+			}
 		}
 		else if (ovi.dwMinorVersion == 3) {
-			if (ovi.wProductType == VER_NT_WORKSTATION)
+			if (ovi.wProductType == VER_NT_WORKSTATION) {
 				osdispver = QLatin1String("Windows 8.1");
-			else
+			} else {
 				osdispver = QLatin1String("Windows Server 2012 R2");
+			}
 		}
 
-		pGPI = (PGPI) GetProcAddress(
-		GetModuleHandle(TEXT("kernel32.dll")),
-		"GetProductInfo");
-		pGPI(ovi.dwMajorVersion, ovi.dwMinorVersion, 0, 0, &dwType);
+		typedef BOOL (WINAPI *PGPI)(DWORD, DWORD, DWORD, DWORD, PDWORD);
+		PGPI pGetProductInfo = (PGPI) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetProductInfo");
+		if (pGetProductInfo == NULL) {
+			return QString();
+		}
+
+		DWORD dwType = 0;
+		if (!pGetProductInfo(ovi.dwMajorVersion, ovi.dwMinorVersion, 0, 0, &dwType)) {
+			return QString();
+		}
 
 		switch(dwType) {
 		case PRODUCT_ULTIMATE:
@@ -428,87 +274,88 @@ QString OSInfo::getOSDisplayableVersion() {
 			osdispver.append(QLatin1String(" Web Server Edition"));
 			break;
 		}
-	}
-
-	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 0) {
+	} else if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 0) {
 		osdispver = QLatin1String("Windows 2000");
-		if (ovi.wProductType == VER_NT_WORKSTATION)
-			osdispver.append(QLatin1String("Professional"));
-		else
-			if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
-				osdispver.append(QLatin1String("Datacenter Server"));
-			else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
-				osdispver.append(QLatin1String("Advanced Server"));
-			else
-				osdispver.append(QLatin1String("Server"));
-	}
-
-	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 1) {
-		osdispver = QLatin1String("Windows XP ");
-		if (ovi.wSuiteMask & VER_SUITE_PERSONAL)
-			osdispver.append(QLatin1String("Home Edition"));
-		else
-			osdispver.append(QLatin1String("Professional"));
-	}
-
-	if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 2) {
-		if (GetSystemMetrics(SM_SERVERR2))
+		if (ovi.wProductType == VER_NT_WORKSTATION) {
+			osdispver.append(QLatin1String(" Professional"));
+		} else {
+			if (ovi.wSuiteMask & VER_SUITE_DATACENTER) {
+				osdispver.append(QLatin1String(" Datacenter Server"));
+			} else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE) {
+				osdispver.append(QLatin1String(" Advanced Server"));
+			} else {
+				osdispver.append(QLatin1String(" Server"));
+			}
+		}
+	} else if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 1) {
+		osdispver = QLatin1String("Windows XP");
+		if (ovi.wSuiteMask & VER_SUITE_PERSONAL) {
+			osdispver.append(QLatin1String(" Home Edition"));
+		} else {
+			osdispver.append(QLatin1String(" Professional"));
+		}
+	} else if (ovi.dwMajorVersion == 5 && ovi.dwMinorVersion == 2) {
+		if (GetSystemMetrics(SM_SERVERR2)) {
 			osdispver = QLatin1String("Windows Server 2003 R2");
-		else if (ovi.wSuiteMask & VER_SUITE_STORAGE_SERVER)
+		} else if (ovi.wSuiteMask & VER_SUITE_STORAGE_SERVER) {
 			osdispver = QLatin1String("Windows Storage Server 2003");
-		else if (ovi.wSuiteMask & VER_SUITE_WH_SERVER)
+		} else if (ovi.wSuiteMask & VER_SUITE_WH_SERVER) {
 			osdispver = QLatin1String("Windows Home Server");
-		else if (ovi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+		} else if (ovi.wProductType == VER_NT_WORKSTATION && si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
 			osdispver = QLatin1String("Windows XP Professional x64 Edition");
-		else
+		} else {
 			osdispver = QLatin1String("Windows Server 2003");
+		}
 
 		if (ovi.wProductType != VER_NT_WORKSTATION) {
 			if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
-				if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
+				if (ovi.wSuiteMask & VER_SUITE_DATACENTER) {
 					osdispver.append(QLatin1String(" Datacenter x64 Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
+				} else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE) {
 					osdispver.append(QLatin1String(" Enterprise x64 Edition"));
-				else
+				} else {
 					osdispver.append(QLatin1String(" Standard x64 Edition"));
+				}
 			} else {
-				if (ovi.wSuiteMask & VER_SUITE_COMPUTE_SERVER)
+				if (ovi.wSuiteMask & VER_SUITE_COMPUTE_SERVER) {
 					osdispver.append(QLatin1String(" Compute Cluster Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_DATACENTER)
+				} else if (ovi.wSuiteMask & VER_SUITE_DATACENTER) {
 					osdispver.append(QLatin1String(" Datacenter Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE)
+				} else if (ovi.wSuiteMask & VER_SUITE_ENTERPRISE) {
 					osdispver.append(QLatin1String(" Enterprise Edition"));
-				else if (ovi.wSuiteMask & VER_SUITE_BLADE)
+				} else if (ovi.wSuiteMask & VER_SUITE_BLADE) {
 					osdispver.append(QLatin1String(" Web Edition"));
-				else
+				} else {
 					osdispver.append(QLatin1String(" Standard Edition"));
+				}
 			}
 		}
 	}
 
-	// Service Packs
-	QString sp = sp.fromStdWString(ovi.szCSDVersion);
-	if (sp.length() > 0) {
-		sp.prepend(QLatin1String("\n"));
+	// Service Packs (may be empty)
+	static_assert(sizeof(TCHAR) == sizeof(wchar_t), "Expected Unicode TCHAR.");
+	QString sp = QString::fromWCharArray(ovi.szCSDVersion);
+	if (!sp.isEmpty()) {
+		osdispver.append(QLatin1String(" "));
 		osdispver.append(sp);
-		osdispver.append(QLatin1String(","));
 	}
 
-	// 32/64?
+	// Architecture
 	if (ovi.dwMajorVersion >= 6) {
-		if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
-			osdispver.append(QLatin1String(" 64-bit"));
-		else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
-			osdispver.append(QLatin1String(" 32-bit"));
+		if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
+			osdispver.append(QLatin1String(" x64"));
+		} else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
+			osdispver.append(QLatin1String(" x86"));
+		}
 	}
 
 	QString osv;
-	osv.sprintf(" (%d.%d.%d)", ovi.dwMajorVersion, ovi.dwMinorVersion, ovi.dwBuildNumber);
+	osv.sprintf(" - %d.%d.%d", ovi.dwMajorVersion, ovi.dwMinorVersion, ovi.dwBuildNumber);
 	osdispver.append(osv);
 
 	return osdispver;
 #else
-	return QString();
+	return OSInfo::getOSVersion();
 #endif
 }
 
