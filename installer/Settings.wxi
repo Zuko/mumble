@@ -11,7 +11,7 @@
 
   <!-- Defaults for values that aren't given by environment variables -->
   <?ifndef env.MumbleSourceDir ?>
-    <?define SourceDir = "\dev\mumble" ?>
+    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2013-10-03-b0a2b28\mumble\installer" ?>
   <?else ?>
     <?define SourceDir = "$(env.MumbleSourceDir)" ?>
   <?endif ?>
