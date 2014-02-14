@@ -100,18 +100,24 @@ bool AudioOutputRegistrar::canExclusive() const {
 	return false;
 }
 
-AudioOutput::AudioOutput() {
-	iFrameSize = SAMPLE_RATE / 100;
-	bRunning = true;
-
-	iChannels = 0;
-	fSpeakers = NULL;
-	fSpeakerVolume = NULL;
-	bSpeakerPositional = NULL;
-
-	iMixerFreq = 0;
-	eSampleFormat = SampleFloat;
-	iSampleSize = 0;
+AudioOutput::AudioOutput()
+    : fSpeakers(NULL)
+    , fSpeakerVolume(NULL)
+    , bSpeakerPositional(NULL)
+    
+    , eSampleFormat(SampleFloat)
+    
+    , bRunning(true)
+    
+    , iFrameSize(SAMPLE_RATE / 100)
+    , iMixerFreq(0)
+    , iChannels(0)
+    , iSampleSize(0)
+    
+    , qrwlOutputs()
+    , qmOutputs() {
+	
+	// Nothing
 }
 
 AudioOutput::~AudioOutput() {
@@ -358,11 +364,12 @@ void AudioOutput::initializeMixer(const unsigned int *chanmasks, bool forceheadp
 bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 	QList<AudioOutputUser *> qlMix;
 	QList<AudioOutputUser *> qlDel;
-
-	if (g.s.fVolume < 0.01f)
+	
+	if (g.s.fVolume < 0.01f) {
 		return false;
+	}
 
-	const float adjustFactor = std::pow(10, -18.f / 20);
+	const float adjustFactor = std::pow(10.f , -18.f / 20);
 	const float mul = g.s.fVolume;
 	const unsigned int nchan = iChannels;
 	ServerHandlerPtr sh = g.sh;
@@ -407,6 +414,7 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 		if (recorder) {
 			recbuff = boost::shared_array<float>(new float[nsamp]);
 			memset(recbuff.get(), 0, sizeof(float) * nsamp);
+			recorder->prepareBufferAdds();
 		}
 
 		for (unsigned int i=0;i<iChannels;++i)
@@ -500,7 +508,7 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 						recbuff[i] += pfBuffer[i] * volumeAdjustment;
 					}
 
-					if (!recorder->getMixDown()) {
+					if (!recorder->isInMixDownMode()) {
 						if (aos) {
 							recorder->addBuffer(aos->p, recbuff, nsamp);
 						} else {
@@ -559,7 +567,7 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 			}
 		}
 
-		if (recorder && recorder->getMixDown()) {
+		if (recorder && recorder->isInMixDownMode()) {
 			recorder->addBuffer(NULL, recbuff, nsamp);
 		}
 
@@ -576,7 +584,7 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 
 	foreach(AudioOutputUser *aop, qlDel)
 		removeBuffer(aop);
-
+	
 	return (! qlMix.isEmpty());
 }
 
@@ -587,3 +595,4 @@ bool AudioOutput::isAlive() const {
 unsigned int AudioOutput::getMixerFreq() const {
 	return iMixerFreq;
 }
+
