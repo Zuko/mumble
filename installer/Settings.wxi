@@ -5,15 +5,15 @@
   <?define ProductVersion = "1.2.5" ?>
 
   <!-- Enable the StaticBuild option if we detect MUMBLE_PREFIX in the environment -->
-  <?ifdef env.MUMBLE_PREFIX ?>
-    <?define StaticBuild = true ?>
-  <?endif ?>
+
+  <?define StaticBuild = true ?>
+ 
 
   <!-- Defaults for values that aren't given by environment variables -->
   <?ifndef env.MumbleSourceDir ?>
-    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2013-10-03-b0a2b28\mumble\installer" ?>
+    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2013-10-03-b0a2b28\mumble" ?>
   <?else ?>
-    <?define SourceDir = "$(env.MumbleSourceDir)" ?>
+    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2013-10-03-b0a2b28\mumble" ?>
   <?endif ?>
   
   <?ifndef env.MumbleQtDir ?>
