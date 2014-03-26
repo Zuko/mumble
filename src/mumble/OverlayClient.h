@@ -28,61 +28,84 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MUMBLE_MUMBLE_OVERLAYTEXT_H_
-#define MUMBLE_MUMBLE_OVERLAYTEXT_H_
+#ifndef MUMBLE_MUMBLE_OVERLAYCLIENT_H_
+#define MUMBLE_MUMBLE_OVERLAYCLIENT_H_
 
-#include <QtGui/QPixmap>
-#include <QtGui/QFont>
+#include <QtCore/QUrl>
+#include <QtNetwork/QLocalSocket>
 
-//! Annotated QPixmap supplying a basepoint.
-class BasepointPixmap : public QPixmap {
-	public:
-		//! Local coordinates of the base point.
-		QPoint qpBasePoint;
-		//@{
-		/**
-		 * Font ascent and descent.
-		 * The pixmap may exceed those font metrics, so if you need to
-		 * transform rendered text properly, use these attributes.
-		 */
-		int iAscent;
-		int iDescent;
-		//@}
+#include "Timer.h"
+#include "../../overlay/overlay.h"
+#include "SharedMemory.h"
+#include "OverlayUserGroup.h"
 
-		BasepointPixmap();
-		//! Create from QPixmap, basepoint is bottom left.
-		BasepointPixmap(const QPixmap&);
-		//! Empty pixmap, basepoint is bottom left.
-		BasepointPixmap(int, int);
-		//! Empty pixmap with specified basepoint.
-		BasepointPixmap(int, int, const QPoint&);
-};
+class ClientUser;
+class Overlay;
+class QLibrary;
+class QLocalServer;
 
-class OverlayTextLine {
+class OverlayClient : public QObject {
+		friend class Overlay;
 	private:
-		const float fEdgeFactor;
+		Q_OBJECT
+		Q_DISABLE_COPY(OverlayClient)
+	protected:
+		OverlayMsg omMsg;
+		QLocalSocket *qlsSocket;
+		SharedMemory2 *smMem;
+		QRect qrLast;
+		Timer t;
 
-		QString qsText;
-		QFont qfFont;
-		QPainterPath qpp;
-		float fAscent, fDescent;
-		float fXCorrection, fYCorrection;
-		int iCurWidth, iCurHeight;
-		float fEdge;
-		float fBaseliningThreshold;
-		bool bElided;
+		unsigned int fFps;
+		int iOffsetX, iOffsetY;
+		QGraphicsPixmapItem *qgpiCursor;
+		QGraphicsPixmapItem *qgpiLogo;
+		QGraphicsPixmapItem *qgpiFPS;
+		QGraphicsPixmapItem *qgpiDot;
+		QGraphicsPixmapItem *qgpiTime;
 
-		BasepointPixmap render(int, int, const QColor&, const QPoint&) const;
+		/// The process ID of the processing displaying an overlay.
+		quint64 uiPid;
+		QGraphicsScene qgs;
+		OverlayUserGroup ougUsers;
+
+#ifdef Q_OS_MAC
+		QMap<Qt::CursorShape, QPixmap> qmCursors;
+#endif
+
+		bool bWasVisible;
+		bool bDelete;
+
+		void setupRender();
+		void setupScene(bool show);
+
+		bool eventFilter(QObject *, QEvent *);
+
+		void readyReadMsgInit(unsigned int length);
+
+		QList<QRectF> qlDirty;
+	protected slots:
+		void readyRead();
+		void changed(const QList<QRectF> &);
+		void render();
 	public:
-		OverlayTextLine(const QString&, const QFont&);
+		QGraphicsView qgv;
+		unsigned int uiWidth, uiHeight;
+		int iMouseX, iMouseY;
 
-		void setFont(const QFont&);
-		void setEdge(float);
-
-		//! Render text with current font.
-		BasepointPixmap createPixmap(QColor col);
-		//! Render text to fit a bounding box.
-		BasepointPixmap createPixmap(unsigned int maxwidth, unsigned int height, QColor col);
+		OverlayClient(QLocalSocket *, QObject *);
+		~OverlayClient();
+		void reset();
+	public slots:
+		void showGui();
+		void hideGui();
+		void scheduleDelete();
+		void updateMouse();
+		void updateFPS();
+		void updateDot();
+		void updateTime();
+		bool update();
+		void openEditor();
 };
 
-#endif //_OVERLAYTEXT_H
+#endif

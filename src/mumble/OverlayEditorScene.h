@@ -28,44 +28,68 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MUMBLE_OVERLAY_BLACKLIST_H_
-#define MUMBLE_OVERLAY_BLACKLIST_H_
+#ifndef MUMBLE_MUMBLE_OVERLAYEDITORSCENE_H_
+#define MUMBLE_MUMBLE_OVERLAYEDITORSCENE_H_
 
-static const char *overlayBlacklist[] = {
-	"iexplore.exe",
-	"ieuser.exe",
-	"vlc.exe",
-	"crimecraft.exe",
-	"dbgview.exe",
-	"opera.exe",
-	"chrome.exe",
-	"acrord32.exe",
-	"explorer.exe",
-	"wmpnscfg.exe",
-	"firefox.exe",
-	"thunderbird.exe",
-	"instantbird.exe",
-	"wlmail.exe",   // Windows Live Suite (mshtml.dll)
-	"msnmsgr.exe",
-	"MovieMaker.exe",
-	"WLXPhotoGallery.exe",
-	"psi.exe", // Secunia PSI (uses mshtml.dll)
-	"Photoshop.exe",
-	"blender.exe",
-	"googleearth.exe",
-	"XBMC.exe", // http://xbmc.org/
-	"BOXEE.exe", // http://www.boxee.tv/
-	"hammer.exe", // VALVE Hammer Editor
-	"hlmv.exe", // Half-Life Model Viewer
-	"hlfaceposer.exe", // Face Poser (from Source SDK)
-	"LoLLauncher.exe", // League of Legends Launcher/Patcher
-	"acrobat.exe", // Adobe Acrobat
-	"Steam.exe", // Prevent invisible hooking
-	"RzSynapse.exe", // Prevent invisible hooking - Razer Synapse (settings online synchronization)
-	"IpOverUsbSvc.exe", // Windows Phone IP over USB Transport
-	"Origin.exe", // EA Origin
-	"HydraSysTray.exe", // Razer Hydra system tray
-	NULL
+#include <QtGui/QGraphicsScene>
+
+#include "Settings.h"
+
+class OverlayEditorScene : public QGraphicsScene {
+	private:
+		Q_OBJECT
+		Q_DISABLE_COPY(OverlayEditorScene)
+
+	protected:
+		QGraphicsItem *qgiGroup;
+
+		QGraphicsPixmapItem *qgpiMuted;
+		QGraphicsPixmapItem *qgpiAvatar;
+		QGraphicsPixmapItem *qgpiName;
+		QGraphicsPixmapItem *qgpiChannel;
+		QGraphicsPathItem *qgpiBox;
+		QGraphicsRectItem *qgriSelected;
+		QGraphicsPixmapItem *qgpiSelected;
+		int iDragCorner;
+
+		Qt::WindowFrameSection wfsHover;
+
+		unsigned int uiSize;
+
+		void setup();
+
+		void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+		void mousePressEvent(QGraphicsSceneMouseEvent *);
+		void mouseMoveEvent(QGraphicsSceneMouseEvent *);
+		void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
+		void updateCursorShape(const QPointF &point);
+
+		void drawBackground(QPainter *, const QRectF &);
+
+		QGraphicsPixmapItem *childAt(const QPointF &);
+		QRectF selectedRect() const;
+
+		static Qt::WindowFrameSection rectSection(const QRectF &rect, const QPointF &point, qreal dist = 3.0f);
+	public:
+		Settings::TalkState tsColor;
+		unsigned int uiZoom;
+		OverlaySettings os;
+
+		OverlayEditorScene(const OverlaySettings &, QObject *p = NULL);
+	public slots:
+		void resync();
+		void updateSelected();
+
+		void updateMuted();
+		void updateUserName();
+		void updateChannel();
+		void updateAvatar();
+
+		void moveMuted();
+		void moveUserName();
+		void moveChannel();
+		void moveAvatar();
+		void moveBox();
 };
 
 #endif

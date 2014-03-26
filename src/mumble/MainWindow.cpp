@@ -51,7 +51,7 @@
 #include "Log.h"
 #include "Net.h"
 #include "NetworkConfig.h"
-#include "Overlay.h"
+#include "OverlayClient.h"
 #include "Plugins.h"
 #include "PTTButtonWidget.h"
 #include "ServerHandler.h"
@@ -1920,26 +1920,36 @@ void MainWindow::updateMenuPermissions() {
 	qteChat->setEnabled(p & (ChanACL::Write | ChanACL::TextMessage));
 }
 
-void MainWindow::talkingChanged() {
-	ClientUser *p = ClientUser::get(g.uiSession);
-	if (p && g.s.bAttenuateOthersOnTalk) {
-		switch (p->tsState) {
-			case Settings::Talking:
-			case Settings::Whispering:
-			case Settings::Shouting:
-				g.bAttenuateOthers = true;
-				break;
-			case Settings::Passive:
-			default:
-				g.bAttenuateOthers = false;
-				break;
-		}
-	} else {
+void MainWindow::userStateChanged() {
+	if (g.s.bStateInTray) {
+		updateTrayIcon();
+	}
+	
+	ClientUser *user = ClientUser::get(g.uiSession);
+	if (user == NULL) {
 		g.bAttenuateOthers = false;
+		g.prioritySpeakerActiveOverride = false;
+		
+		return;
 	}
 
-	if (g.s.bStateInTray)
-		updateTrayIcon();
+	switch (user->tsState) {
+		case Settings::Talking:
+		case Settings::Whispering:
+		case Settings::Shouting:
+			g.bAttenuateOthers = g.s.bAttenuateOthersOnTalk;
+
+			g.prioritySpeakerActiveOverride =
+			        g.s.bAttenuateUsersOnPrioritySpeak
+			        && user->bPrioritySpeaker;
+			
+			break;
+		case Settings::Passive:
+		default:
+			g.bAttenuateOthers = false;
+			g.prioritySpeakerActiveOverride = false;
+			break;
+	}
 }
 
 void MainWindow::on_qaAudioReset_triggered() {

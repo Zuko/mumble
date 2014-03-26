@@ -28,44 +28,44 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MUMBLE_OVERLAY_BLACKLIST_H_
-#define MUMBLE_OVERLAY_BLACKLIST_H_
+#ifndef MUMBLE_MUMBLE_OVERLAYUSERGROUP_H_
+#define MUMBLE_MUMBLE_OVERLAYUSERGROUP_H_
 
-static const char *overlayBlacklist[] = {
-	"iexplore.exe",
-	"ieuser.exe",
-	"vlc.exe",
-	"crimecraft.exe",
-	"dbgview.exe",
-	"opera.exe",
-	"chrome.exe",
-	"acrord32.exe",
-	"explorer.exe",
-	"wmpnscfg.exe",
-	"firefox.exe",
-	"thunderbird.exe",
-	"instantbird.exe",
-	"wlmail.exe",   // Windows Live Suite (mshtml.dll)
-	"msnmsgr.exe",
-	"MovieMaker.exe",
-	"WLXPhotoGallery.exe",
-	"psi.exe", // Secunia PSI (uses mshtml.dll)
-	"Photoshop.exe",
-	"blender.exe",
-	"googleearth.exe",
-	"XBMC.exe", // http://xbmc.org/
-	"BOXEE.exe", // http://www.boxee.tv/
-	"hammer.exe", // VALVE Hammer Editor
-	"hlmv.exe", // Half-Life Model Viewer
-	"hlfaceposer.exe", // Face Poser (from Source SDK)
-	"LoLLauncher.exe", // League of Legends Launcher/Patcher
-	"acrobat.exe", // Adobe Acrobat
-	"Steam.exe", // Prevent invisible hooking
-	"RzSynapse.exe", // Prevent invisible hooking - Razer Synapse (settings online synchronization)
-	"IpOverUsbSvc.exe", // Windows Phone IP over USB Transport
-	"Origin.exe", // EA Origin
-	"HydraSysTray.exe", // Razer Hydra system tray
-	NULL
+#include "Overlay.h"
+
+class OverlayUser;
+
+class OverlayUserGroup : public QObject, public OverlayGroup {
+	private:
+		Q_OBJECT
+		Q_DISABLE_COPY(OverlayUserGroup);
+	public:
+		enum { Type = UserType + 3 };
+	protected:
+		OverlaySettings *os;
+
+		QMap<QObject *, OverlayUser *> qmUsers;
+		QList<OverlayUser *> qlExampleUsers;
+
+		QGraphicsEllipseItem *qgeiHandle;
+
+		void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+		void wheelEvent(QGraphicsSceneWheelEvent *);
+		bool sceneEventFilter(QGraphicsItem *, QEvent *);
+	protected slots:
+		void userDestroyed(QObject *);
+		void moveUsers();
+	public:
+		bool bShowExamples;
+
+		OverlayUserGroup(OverlaySettings *);
+		~OverlayUserGroup();
+
+		int type() const;
+	public slots:
+		void reset();
+		void updateUsers();
+		void updateLayout();
 };
 
 #endif

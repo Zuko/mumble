@@ -28,44 +28,47 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MUMBLE_OVERLAY_BLACKLIST_H_
-#define MUMBLE_OVERLAY_BLACKLIST_H_
+#ifndef MUMBLE_MUMBLE_OVERLAYEDITOR_H_
+#define MUMBLE_MUMBLE_OVERLAYEDITOR_H_
 
-static const char *overlayBlacklist[] = {
-	"iexplore.exe",
-	"ieuser.exe",
-	"vlc.exe",
-	"crimecraft.exe",
-	"dbgview.exe",
-	"opera.exe",
-	"chrome.exe",
-	"acrord32.exe",
-	"explorer.exe",
-	"wmpnscfg.exe",
-	"firefox.exe",
-	"thunderbird.exe",
-	"instantbird.exe",
-	"wlmail.exe",   // Windows Live Suite (mshtml.dll)
-	"msnmsgr.exe",
-	"MovieMaker.exe",
-	"WLXPhotoGallery.exe",
-	"psi.exe", // Secunia PSI (uses mshtml.dll)
-	"Photoshop.exe",
-	"blender.exe",
-	"googleearth.exe",
-	"XBMC.exe", // http://xbmc.org/
-	"BOXEE.exe", // http://www.boxee.tv/
-	"hammer.exe", // VALVE Hammer Editor
-	"hlmv.exe", // Half-Life Model Viewer
-	"hlfaceposer.exe", // Face Poser (from Source SDK)
-	"LoLLauncher.exe", // League of Legends Launcher/Patcher
-	"acrobat.exe", // Adobe Acrobat
-	"Steam.exe", // Prevent invisible hooking
-	"RzSynapse.exe", // Prevent invisible hooking - Razer Synapse (settings online synchronization)
-	"IpOverUsbSvc.exe", // Windows Phone IP over USB Transport
-	"Origin.exe", // EA Origin
-	"HydraSysTray.exe", // Razer Hydra system tray
-	NULL
+#include "OverlayEditorScene.h"
+#include "ui_OverlayEditor.h"
+
+struct OverlaySettings;
+
+class OverlayEditor : public QDialog, public Ui::OverlayEditor {
+	private:
+		Q_OBJECT
+		Q_DISABLE_COPY(OverlayEditor)
+	protected:
+		QGraphicsItem *qgiPromote;
+		OverlayEditorScene oes;
+		OverlaySettings *os;
+
+		void enterEvent(QEvent *);
+		void leaveEvent(QEvent *);
+	public:
+		OverlayEditor(QWidget *p = NULL, QGraphicsItem *qgi = NULL, OverlaySettings *osptr = NULL);
+		~OverlayEditor();
+	signals:
+		void applySettings();
+	public slots:
+		void reset();
+		void apply();
+		void accept();
+
+		void on_qrbPassive_clicked();
+		void on_qrbTalking_clicked();
+		void on_qrbWhisper_clicked();
+		void on_qrbShout_clicked();
+
+		void on_qcbAvatar_clicked();
+		void on_qcbUser_clicked();
+		void on_qcbChannel_clicked();
+		void on_qcbMutedDeafened_clicked();
+		void on_qcbBox_clicked();
+
+		void on_qsZoom_valueChanged(int);
 };
 
 #endif

@@ -28,44 +28,46 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MUMBLE_OVERLAY_BLACKLIST_H_
-#define MUMBLE_OVERLAY_BLACKLIST_H_
+#ifndef MUMBLE_MUMBLE_OVERLAYUSER_H_
+#define MUMBLE_MUMBLE_OVERLAYUSER_H_
 
-static const char *overlayBlacklist[] = {
-	"iexplore.exe",
-	"ieuser.exe",
-	"vlc.exe",
-	"crimecraft.exe",
-	"dbgview.exe",
-	"opera.exe",
-	"chrome.exe",
-	"acrord32.exe",
-	"explorer.exe",
-	"wmpnscfg.exe",
-	"firefox.exe",
-	"thunderbird.exe",
-	"instantbird.exe",
-	"wlmail.exe",   // Windows Live Suite (mshtml.dll)
-	"msnmsgr.exe",
-	"MovieMaker.exe",
-	"WLXPhotoGallery.exe",
-	"psi.exe", // Secunia PSI (uses mshtml.dll)
-	"Photoshop.exe",
-	"blender.exe",
-	"googleearth.exe",
-	"XBMC.exe", // http://xbmc.org/
-	"BOXEE.exe", // http://www.boxee.tv/
-	"hammer.exe", // VALVE Hammer Editor
-	"hlmv.exe", // Half-Life Model Viewer
-	"hlfaceposer.exe", // Face Poser (from Source SDK)
-	"LoLLauncher.exe", // League of Legends Launcher/Patcher
-	"acrobat.exe", // Adobe Acrobat
-	"Steam.exe", // Prevent invisible hooking
-	"RzSynapse.exe", // Prevent invisible hooking - Razer Synapse (settings online synchronization)
-	"IpOverUsbSvc.exe", // Windows Phone IP over USB Transport
-	"Origin.exe", // EA Origin
-	"HydraSysTray.exe", // Razer Hydra system tray
-	NULL
+#include <QtCore/QtGlobal>
+
+#include "Overlay.h"
+
+class OverlayUser : public OverlayGroup {
+	private:
+		Q_DISABLE_COPY(OverlayUser)
+	public:
+		enum { Type = UserType + 1 };
+	protected:
+		QGraphicsPixmapItem *qgpiMuted, *qgpiDeafened;
+		QGraphicsPixmapItem *qgpiAvatar;
+		QGraphicsPixmapItem *qgpiName[4];
+		QGraphicsPixmapItem *qgpiChannel;
+		QGraphicsPathItem *qgpiBox;
+
+		OverlaySettings *os;
+
+		unsigned int uiSize;
+		ClientUser *cuUser;
+		Settings::TalkState tsColor;
+
+		QString qsName;
+		QString qsChannelName;
+		QByteArray qbaAvatar;
+
+		void setup();
+
+	public:
+		OverlayUser(ClientUser *cu, unsigned int uiSize, OverlaySettings *osptr);
+		OverlayUser(Settings::TalkState ts, unsigned int uiSize, OverlaySettings *osptr);
+		void updateUser();
+		void updateLayout();
+
+		int type() const;
+		static QRectF scaledRect(const QRectF &qr, qreal scale);
+		static QPointF alignedPosition(const QRectF &box, const QRectF &item, Qt::Alignment a);
 };
 
 #endif
