@@ -6,7 +6,7 @@
   <Fragment>
     <DirectoryRef Id="PluginFolder">
       <Component Id="aoc.dll">
-        <File Source="C:\Users\Zuko\MumbleBuild-2013-10-03-b0a2b28\mumble\release\plugins\aoc.dll" KeyPath="yes" />
+        <File Source="C:\Users\Zuko\MumbleBuild-2014-04-08-c538370\mumble\release\plugins\aoc.dll" KeyPath="yes" />
       </Component>
       <Component Id="arma2.dll">
         <File Source="$(var.SourceDir)\release\plugins\arma2.dll" KeyPath="yes" />

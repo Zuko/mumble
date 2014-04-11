@@ -11,9 +11,9 @@
 
   <!-- Defaults for values that aren't given by environment variables -->
   <?ifndef env.MumbleSourceDir ?>
-    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2013-10-03-b0a2b28\mumble" ?>
+    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2014-04-08-c538370\mumble" ?>
   <?else ?>
-    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2013-10-03-b0a2b28\mumble" ?>
+    <?define SourceDir = "C:\Users\Zuko\MumbleBuild-2014-04-08-c538370\mumble" ?>
   <?endif ?>
   
   <?ifndef env.MumbleQtDir ?>
