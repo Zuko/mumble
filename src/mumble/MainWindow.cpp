@@ -54,6 +54,7 @@
 #include "OverlayClient.h"
 #include "Plugins.h"
 #include "PTTButtonWidget.h"
+#include "RichTextEditor.h"
 #include "ServerHandler.h"
 #include "TextMessage.h"
 #include "Tokens.h"
@@ -718,8 +719,9 @@ void MainWindow::openUrl(const QUrl &url) {
 
 	g.s.qsLastServer = name;
 	rtLast = MumbleProto::Reject_RejectType_None;
+	bRetryServer = true;
 	qaServerDisconnect->setEnabled(true);
-	g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(host, Log::Server)));
+	g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(Qt::escape(host), Log::Server)));
 	g.sh->setConnectionInfo(host, port, user, pw);
 	g.sh->start(QThread::TimeCriticalPriority);
 }
@@ -915,8 +917,9 @@ void MainWindow::on_qaServerConnect_triggered(bool autoconnect) {
 		recreateServerHandler();
 		qsDesiredChannel = QString();
 		rtLast = MumbleProto::Reject_RejectType_None;
+		bRetryServer = true;
 		qaServerDisconnect->setEnabled(true);
-		g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(cd->qsServer, Log::Server)));
+		g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(Qt::escape(cd->qsServer), Log::Server)));
 		g.sh->setConnectionInfo(cd->qsServer, cd->usPort, cd->qsUsername, cd->qsPassword);
 		g.sh->start(QThread::TimeCriticalPriority);
 	}
@@ -1089,7 +1092,7 @@ void MainWindow::on_qaServerInformation_triggered() {
 	                  Qt::escape(qsc.name()),
 	                  QString::fromLatin1("%1").arg(boost::accumulators::mean(g.sh->accTCP), 0, 'f', 2),
 	                  QString::fromLatin1("%1").arg(sqrt(boost::accumulators::variance(g.sh->accTCP)),0,'f',2),
-	                  host,
+	                  Qt::escape(host),
 	                  QString::number(port));
 	QString qsVoice, qsCrypt, qsAudio;
 
@@ -1129,11 +1132,11 @@ void MainWindow::on_qaServerTexture_triggered() {
 	const QImage &img = choice.second;
 
 	if ((img.height() <= 1024) && (img.width() <= 1024))
-		g.sh->setTexture(choice.first);
+		g.sh->setUserTexture(g.uiSession, choice.first);
 }
 
 void MainWindow::on_qaServerTextureRemove_triggered() {
-	g.sh->setTexture(QByteArray());
+	g.sh->setUserTexture(g.uiSession, QByteArray());
 }
 
 void MainWindow::on_qaServerTokens_triggered() {
@@ -1191,6 +1194,7 @@ void MainWindow::qmUser_aboutToShow() {
 	else {
 		qmUser->addAction(qaUserCommentView);
 		qmUser->addAction(qaUserCommentReset);
+		qmUser->addAction(qaUserTextureReset);
 	}
 
 	qmUser->addAction(qaUserTextMessage);
@@ -1242,6 +1246,7 @@ void MainWindow::qmUser_aboutToShow() {
 		qaUserLocalMute->setEnabled(false);
 		qaUserLocalIgnore->setEnabled(false);
 		qaUserCommentReset->setEnabled(false);
+		qaUserTextureReset->setEnabled(false);
 		qaUserCommentView->setEnabled(false);
 	} else {
 		qaUserKick->setEnabled(! self);
@@ -1250,6 +1255,7 @@ void MainWindow::qmUser_aboutToShow() {
 		qaUserLocalMute->setEnabled(! self);
 		qaUserLocalIgnore->setEnabled(! self);
 		qaUserCommentReset->setEnabled(! p->qbaCommentHash.isEmpty() && (g.pPermissions & (ChanACL::Move | ChanACL::Write)));
+		qaUserTextureReset->setEnabled(! p->qbaTextureHash.isEmpty() && (g.pPermissions & (ChanACL::Move | ChanACL::Write)));
 		qaUserCommentView->setEnabled(! p->qbaCommentHash.isEmpty());
 
 		qaUserMute->setChecked(p->bMute || p->bSuppress);
@@ -1488,6 +1494,22 @@ void MainWindow::on_qaUserCommentReset_triggered() {
 	                                QMessageBox::Yes, QMessageBox::No);
 	if (ret == QMessageBox::Yes) {
 		g.sh->setUserComment(session, QString());
+	}
+}
+
+void MainWindow::on_qaUserTextureReset_triggered() {
+	ClientUser *p = getContextMenuUser();
+
+	if (!p)
+		return;
+
+	unsigned int session = p->uiSession;
+
+	int ret = QMessageBox::question(this, QLatin1String("Mumble"),
+	                                tr("Are you sure you want to reset the avatar of user %1?").arg(Qt::escape(p->qsName)),
+	                                QMessageBox::Yes, QMessageBox::No);
+	if (ret == QMessageBox::Yes) {
+		g.sh->setUserTexture(session, QByteArray());
 	}
 }
 
@@ -2611,7 +2633,9 @@ void MainWindow::serverDisconnected(QAbstractSocket::SocketError err, QString re
 			on_Reconnect_timeout();
 		} else if (!matched && g.s.bReconnect && ! reason.isEmpty()) {
 			qaServerDisconnect->setEnabled(true);
-			qtReconnect->start();
+			if (bRetryServer) {
+				qtReconnect->start();
+			}
 		}
 	}
 	qstiIcon->setToolTip(tr("Mumble -- %1").arg(QLatin1String(MUMBLE_RELEASE)));
@@ -2835,7 +2859,7 @@ QPair<QByteArray, QImage> MainWindow::openImageFile() {
 #endif
 	}
 
-	QString fname = QFileDialog::getOpenFileName(this, tr("Choose image file"), g.s.qsImagePath, tr("Images (*.png *.jpg *.jpeg *.svg)"));
+	QString fname = QFileDialog::getOpenFileName(this, tr("Choose image file"), g.s.qsImagePath, tr("Images (*.png *.jpg *.jpeg)"));
 
 	if (fname.isNull())
 		return retval;
@@ -2855,7 +2879,17 @@ QPair<QByteArray, QImage> MainWindow::openImageFile() {
 	QBuffer qb(&qba);
 	qb.open(QIODevice::ReadOnly);
 
-	QImageReader qir(&qb, fi.suffix().toUtf8());
+	QImageReader qir;
+	qir.setAutoDetectImageFormat(false);
+
+	QByteArray fmt;
+	if (!RichTextImage::isValidImage(qba, fmt)) {
+		QMessageBox::warning(this, tr("Failed to load image"), tr("Image format not recognized."));
+		return retval;
+	}
+
+	qir.setFormat(fmt);
+	qir.setDevice(&qb);
 
 	QImage img = qir.read();
 	if (img.isNull()) {

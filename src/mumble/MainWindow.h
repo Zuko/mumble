@@ -110,6 +110,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		VoiceRecorderDialog *voiceRecorderDialog;
 
 		MumbleProto::Reject_RejectType rtLast;
+		bool bRetryServer;
 		QString qsDesiredChannel;
 		QString randomReason();
 
@@ -187,6 +188,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void on_qaSelfRegister_triggered();
 		void qmUser_aboutToShow();
 		void on_qaUserCommentReset_triggered();
+		void on_qaUserTextureReset_triggered();
 		void on_qaUserCommentView_triggered();
 		void on_qaUserKick_triggered();
 		void on_qaUserBan_triggered();

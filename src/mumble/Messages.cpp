@@ -88,7 +88,7 @@ void MainWindow::msgBanList(const MumbleProto::BanList &msg) {
 void MainWindow::msgReject(const MumbleProto::Reject &msg) {
 	rtLast = msg.type();
 
-	QString reason(u8(msg.reason()));;
+	QString reason;
 
 	switch (rtLast) {
 		case MumbleProto::Reject_RejectType_InvalidUsername:
@@ -107,10 +107,11 @@ void MainWindow::msgReject(const MumbleProto::Reject &msg) {
 			reason = tr("Your account information can not be verified currently. Please try again later");
 			break;
 		default:
+			reason = Qt::escape(u8(msg.reason()));
 			break;
 	}
 
-	g.l->log(Log::ServerDisconnected, tr("Server connection rejected: %1.").arg(Qt::escape(reason)));
+	g.l->log(Log::ServerDisconnected, tr("Server connection rejected: %1.").arg(reason));
 	g.l->setIgnore(Log::ServerDisconnected, 1);
 }
 
@@ -479,7 +480,13 @@ void MainWindow::msgUserState(const MumbleProto::UserState &msg) {
 		}
 	}
 	if (msg.has_name()) {
-		pmModel->renameUser(pDst, u8(msg.name()));
+		QString oldName = pDst->qsName;
+		QString newName = u8(msg.name());
+		pmModel->renameUser(pDst, newName);
+		if (! oldName.isNull() && oldName != newName) {
+			g.l->log(Log::Information, tr("%1 renamed to %2").arg(Log::formatClientUser(pDst, Log::Target, oldName),
+				Log::formatClientUser(pDst, Log::Target)));
+		}
 	}
 	if (msg.has_texture_hash()) {
 		pDst->qbaTextureHash = blob(msg.texture_hash());
@@ -510,6 +517,7 @@ void MainWindow::msgUserRemove(const MumbleProto::UserRemove &msg) {
 	QString reason = Qt::escape(u8(msg.reason()));
 
 	if (pDst == pSelf) {
+		bRetryServer = false;
 		if (msg.ban())
 			g.l->log(Log::YouKicked, tr("You were kicked and banned from the server by %1: %2.").arg(Log::formatClientUser(pSrc, Log::Source)).arg(reason));
 		else
