@@ -198,3 +198,21 @@ void Network::prepareRequest(QNetworkRequest &req) {
 	req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
 	req.setRawHeader(QString::fromLatin1("User-Agent").toUtf8(), QString::fromLatin1("Mozilla/5.0 (%1; %2) Mumble/%3 %4").arg(OSInfo::getOS(), OSInfo::getOSVersion(), QLatin1String(MUMTEXT(MUMBLE_VERSION_STRING)), QLatin1String(MUMBLE_RELEASE)).toUtf8());
 }
+
+void NetworkConfig::on_qpbAdd_clicked() {
+    QString messageText = QInputDialog::getText(this, tr("Add protocol"),tr("Input text for the new allowed protocol"));
+
+    if (messageText.isNull())
+        return;
+
+    QListWidgetItem *newMessage = new QListWidgetItem;
+    newMessage->setText(messageText);
+
+    int row = qlwSchemesList->row(qlwSchemesList->currentItem());
+    newMessage->setFlags (newMessage->flags() | Qt::ItemIsEditable);
+    qlwSchemesList->insertItem(row, newMessage);
+}
+
+void NetworkConfig::on_qpbRemove_clicked() {
+    qDeleteAll(qlwSchemesList->selectedItems());
+}

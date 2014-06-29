@@ -56,6 +56,26 @@ class NetworkConfig : public ConfigWidget, Ui::NetworkConfig {
 		bool expert(bool);
 
 		void on_qcbType_currentIndexChanged(int v);
+private slots:
+        void on_qpbAdd_clicked();
+        void on_qpbRemove_clicked();
+};
+
+static const char *AllowedSchemes[] = {
+        "mumble",
+        "http",
+        "https",
+        "ftp",
+        "clientid",
+        "channelid",
+        "spotify",
+        "steam",
+        "irc",
+        "gg",
+        "mailto",
+        "xmpp",
+        "skype",
+        NULL
 };
 
 namespace Network {

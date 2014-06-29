@@ -721,3 +721,7 @@ void LogConfig::on_qpb_add_clicked() {
 void LogConfig::on_qpb_remove_clicked() {
 	qDeleteAll(qlwReasons->selectedItems());
 }
+
+LogDocumentResourceAddedEvent::LogDocumentResourceAddedEvent()
+	: QEvent(LogDocumentResourceAddedEvent::Type) {
+}
